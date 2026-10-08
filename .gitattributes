@@ -1,2 +1,4 @@
 "栖钥-离线版.html" linguist-generated=true
+# dist 在本项目中是直接维护的源码目录。
+dist/** linguist-vendored=false linguist-generated=false
 dist/vendor/** linguist-vendored=true
