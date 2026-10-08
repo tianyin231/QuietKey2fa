@@ -7,3 +7,6 @@ cloudflare-upload/
 QuietKey-Cloudflare.zip
 tests/*-fixture.*
 QuietKey-加密备份-*.json
+QuietKey-明文账号-*.json
+QuietKey-明文密钥-*.txt
+QuietKey-明文验证链接-*.txt

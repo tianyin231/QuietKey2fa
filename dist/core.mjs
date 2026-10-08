@@ -24,8 +24,26 @@ export function parseUri(text) {
   const url = new URL(text.trim());
   if (url.protocol !== 'otpauth:' || url.hostname !== 'totp') throw new Error('请输入 otpauth://totp/ 链接；迁移二维码和 HOTP 暂不支持。');
   const label = decodeURIComponent(url.pathname.slice(1));
-  const colon = label.indexOf(':');
-  return normalizeAccount({secret: url.searchParams.get('secret'), issuer: url.searchParams.get('issuer') || (colon >= 0 ? label.slice(0,colon) : label), account: colon >= 0 ? label.slice(colon+1) : label, algorithm: url.searchParams.get('algorithm') || 'SHA1', digits: url.searchParams.get('digits') || 6, period: url.searchParams.get('period') || 30});
+  const issuer = url.searchParams.get('issuer');
+  const colon = issuer && label.startsWith(`${issuer}:`) ? issuer.length : label.indexOf(':');
+  return normalizeAccount({secret: url.searchParams.get('secret'), issuer: issuer || (colon >= 0 ? label.slice(0,colon) : label), account: colon >= 0 ? label.slice(colon+1) : label, algorithm: url.searchParams.get('algorithm') || 'SHA1', digits: url.searchParams.get('digits') || 6, period: url.searchParams.get('period') || 30});
+}
+export function serializeAccounts(accounts, format='json') {
+  const rows = accounts.map(({id, ...account}) => account);
+  if(format==='json') return JSON.stringify({accounts:rows},null,2);
+  if(format==='text') return rows.map(a=>a.secret).join('\n')+'\n';
+  if(format==='uri') return rows.map(a=>{
+    const params = new URLSearchParams({secret:a.secret,issuer:a.issuer,algorithm:a.algorithm,digits:a.digits,period:a.period});
+    return `otpauth://totp/${encodeURIComponent(a.issuer)}:${encodeURIComponent(a.account)}?${params}`;
+  }).join('\n')+'\n';
+  throw new Error('不支持的导出格式。');
+}
+export function prepareImport(existing, incoming) {
+  // 同一密钥和验证码参数只保留一份，现有名称、分组和常用标记优先。
+  const fingerprint=a=>JSON.stringify([a.secret,a.algorithm,a.digits,a.period]);
+  const seen=new Set(existing.map(fingerprint));
+  const unique=incoming.filter(a=>{const value=fingerprint(a);if(seen.has(value))return false;seen.add(value);return true;});
+  return {unique,skipped:incoming.length-unique.length};
 }
 function csvLine(line) {
   const fields = []; let current = '', quoted = false;
@@ -34,17 +52,17 @@ function csvLine(line) {
 }
 export function parseInput(text) {
   const source = text.trim(); if (!source) throw new Error('请先输入要导入的内容。');
-  if (source.length > 2_000_000) throw new Error('一次最多导入 2 MB 文本。');
+  if (source.length > 10*1024*1024) throw new Error('一次最多导入 10 MB 文本。');
   if (source.startsWith('[') || source.startsWith('{')) {
     const data = JSON.parse(source); const rows = Array.isArray(data) ? data : data.accounts;
     if (!Array.isArray(rows)) throw new Error('JSON 应为账号数组，或包含 accounts 数组。');
-    if(rows.length>500) throw new Error('一次最多导入 500 个账号。');
+    if(rows.length>5000) throw new Error('一次最多导入 5000 个账号。');
     return rows.map(normalizeAccount);
   }
   const lines = source.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-  if(lines.length>501) throw new Error('一次最多导入 500 个账号。');
   let header = null;
   if (lines[0].toLowerCase().includes('secret') && !lines[0].startsWith('otpauth:')) header = csvLine(lines.shift()).map(x=>x.toLowerCase());
+  if(lines.length>5000) throw new Error('一次最多导入 5000 个账号。');
   return lines.map((line,i) => {
     try {
       if(line.startsWith('otpauth:') || line.startsWith('otpauth-migration:')) return parseUri(line);
