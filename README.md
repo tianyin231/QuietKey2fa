@@ -1,222 +1,270 @@
-# 栖钥 QuietKey
+<p align="center">
+  <img src="./dist/favicon.svg" width="64" height="64" alt="栖钥图标">
+</p>
 
-一个轻量的两步验证码管理工具。采用温暖、克制的中文界面，支持多种账号导入方式，在浏览器本地完成验证码生成和数据加密。
+<h1 align="center">栖钥 QuietKey</h1>
 
-**纯静态前端，无需后端、数据库或注册账号。** 可使用单文件 HTML，也可以部署到 Cloudflare Pages 等静态托管服务，通过手机和电脑浏览器访问。
+<p align="center">每一次登录，都从容一点。<br>本地加密的两步验证码管理工具，支持原始密钥导出与跨设备追加迁移。</p>
 
-## 功能
+<p align="center">
+  <a href="https://github.com/tianyin231/QuietKey2fa/releases/latest"><img src="https://img.shields.io/github/v/release/tianyin231/QuietKey2fa?style=flat-square&amp;color=b76043" alt="最新版本"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-7d8d70?style=flat-square" alt="MIT 许可证"></a>
+  <a href="#功能"><img src="https://img.shields.io/badge/TOTP-SHA1%20%2F%20SHA256%20%2F%20SHA512-877765?style=flat-square" alt="支持的 TOTP 算法"></a>
+</p>
 
-- **TOTP 验证码**：实时生成、倒计时更新、一键复制。
-- **账号管理**：搜索、分组、常用标记、排序、编辑和删除。
-- **多种输入**：手动 Base32 密钥、`otpauth://totp/` 链接、二维码图片、批量文本、CSV 和 JSON。
-- **本地加密**：使用主密码解锁，账号与密钥加密后保存在当前浏览器。
-- **备份与恢复**：导出加密 JSON 文件，在其他设备上输入原主密码恢复。
-- **自动锁定**：默认无操作 5 分钟锁定，可在当前页面调整为 1、5 或 15 分钟。
-- **响应式布局**：适配中文、桌面和移动端，排序菜单支持键盘操作。
+<p align="center">
+  <a href="https://tianyin231.github.io/QuietKey2fa/"><strong>在线使用</strong></a> ·
+  <a href="https://github.com/tianyin231/QuietKey2fa/releases/latest/download/QuietKey-offline.html"><strong>下载离线版</strong></a> ·
+  <a href="https://github.com/tianyin231/QuietKey2fa/releases">版本更新</a> ·
+  <a href="https://github.com/tianyin231/QuietKey2fa/issues/new/choose">反馈问题</a>
+</p>
 
-首次打开不会填充演示账号，可以创建自己的保险库或恢复已有备份。
+![栖钥桌面界面：账号分组、验证码倒计时与多种导入入口](./.github/assets/desktop.png)
 
-## 开始使用
+<p align="center"><sub>界面截图中的账号和密钥均为专门生成的测试数据。</sub></p>
+
+<details>
+<summary>查看手机界面</summary>
+
+<p align="center"><img src="./.github/assets/mobile.png" width="300" alt="栖钥手机界面"></p>
+
+</details>
+
+栖钥是纯静态前端：无需注册、后端或数据库，在浏览器本地生成 TOTP 验证码。可以直接使用在线版，也可以下载一个 HTML 文件离线使用。
+
+**网站更新的是程序，账号数据保存在你的浏览器里。不同域名、设备和浏览器之间不会自动同步，请通过加密备份迁移。**
+
+[快速开始](#快速开始) · [功能](#功能) · [导出与迁移](#导出与迁移) · [导入格式](#导入格式) · [数据与安全](#数据与安全) · [部署与开发](#部署与开发)
+
+## 快速开始
+
+### 在线使用
+
+1. 打开 **[GitHub 在线版](https://tianyin231.github.io/QuietKey2fa/)**。
+2. 点击「创建我的保险库」，设置主密码。
+3. 点击「添加账号」，输入服务提供的密钥，或导入验证链接、二维码、CSV、JSON。
+4. 点击验证码即可复制。账号添加完成后，建议导出一份加密备份。
+
+已有栖钥备份且新设备上尚无账号时，也可以从首页点击「已有备份？恢复保险库」。
 
 ### 单文件离线版
 
-1. 下载仓库中的 [栖钥-离线版.html](./栖钥-离线版.html) 原始文件，而不是保存 GitHub 的文件展示页面。
-2. 用支持 Web Crypto 的现代浏览器打开。
-3. 点击「创建我的保险库」，设置主密码，再添加账号。
+从 [最新版本](https://github.com/tianyin231/QuietKey2fa/releases/latest) 下载 **`QuietKey-offline.html`**，使用现代浏览器打开。不需要安装 Node.js 或启动服务，样式、脚本和二维码识别库均已内置。
 
-HTML 已内置样式、脚本和二维码识别库，不需要安装 Node.js，也不需要启动服务。
+也可以下载仓库中的 [栖钥-离线版.html](./栖钥-离线版.html) 原始文件；不要把 GitHub 的文件展示页面保存为离线版。部分手机的文件预览器不能完整运行网页，这时请使用 HTTPS 在线版。
 
-本地 `file://` 页面的加密、存储与剪贴板能力取决于浏览器。部分手机会将 HTML 交给文件预览器，无法完整运行；这种情况请使用下文的 HTTPS 静态托管方式。
+## 功能
 
-### 本地开发
-
-需要提供 Web Crypto API 的现代 Node.js 环境，建议 Node.js 22 或更高版本。
-
-```bash
-git clone https://github.com/tianyin231/QuietKey.git
-cd QuietKey
-npm start
-```
-
-打开 `http://127.0.0.1:8765`。项目没有需要安装的 npm 依赖，无需运行 `npm install`。开发服务器仅监听本机地址，不用于手机远程访问。
-
-| 命令 | 用途 |
+| 功能 | 支持内容 |
 | --- | --- |
-| `npm start` | 启动本地静态文件服务器 |
-| `npm run build:standalone` | 根据 `dist/` 源码重新生成单文件 HTML |
-| `npm test` | 重新打包并运行算法、解析、加密及打包检查 |
+| 验证码 | TOTP 实时生成、倒计时、一键复制；SHA1 / SHA256 / SHA512 |
+| 账号管理 | 搜索、分组、常用标记、排序、编辑和删除 |
+| 导入账号 | Base32 密钥、`otpauth://totp/` 链接、二维码图片、批量文本、CSV、JSON |
+| 原始密钥 | 单个账号显示与复制；全部账号导出为密钥 TXT、明文 JSON 或验证链接 |
+| 加密备份 | 导出加密 JSON，兼容已有栖钥备份 |
+| 追加迁移 | 解密后预览，只追加缺少的账号，保留当前账号和主密码 |
+| 本地存储 | AES-256-GCM 加密后存入浏览器；主密码不保存 |
+| 自动锁定 | 默认无操作 5 分钟锁定，可在当前页面设为 1、5 或 15 分钟 |
+| 使用方式 | 桌面、手机浏览器，以及单文件离线 HTML |
 
-## 部署到 Cloudflare
+## 导出与迁移
 
-网站不需要服务端运行时，Cloudflare 只需提供静态文件。
+### 获取原始 2FA 密钥
 
-### Workers：连接 GitHub 部署
+- **单个账号**：点击账号右侧「⋯」→「显示密钥」或「复制密钥」。取得的是 Base32 设置密钥，不是不断变化的验证码。
+- **批量导出**：打开「备份与恢复」→「导出密钥」，选择下面的格式。
 
-在 Cloudflare 的 **Workers & Pages** 中创建 Worker，连接本仓库。如果页面出现「构建命令」和「部署命令」，按下面填写：
-
-| 设置 | 值 |
-| --- | --- |
-| 项目名称 | `quietkey` |
-| 生产分支 | `main` |
-| 根目录 | 仓库根目录，无需修改 |
-| 构建命令 | **留空** |
-| 部署命令 | `npx wrangler deploy --name quietkey --assets ./dist --compatibility-date 2026-09-11` |
-| 非生产分支构建 | 暂不需要预览部署时，取消勾选 |
-| Protect with Cloudflare Access | 可保持关闭；需要限制网站访问人员时再配置 |
-
-可直接复制部署命令：
-
-```bash
-npx wrangler deploy --name quietkey --assets ./dist --compatibility-date 2026-09-11
-```
-
-`dist/` 已包含可直接发布的网页，因此构建命令留空，不用填写 `npm start` 或 `npm run build:standalone`。后者只用于生成单文件离线版。
-
-`--name` 应与 Cloudflare 项目名称一致。`--compatibility-date` 指定运行环境的兼容日期，不是网站有效期，无需每天更新；省略它且没有 Wrangler 配置文件时，会出现 `A compatibility_date is required` 错误。
-
-部署成功后，在项目的「概览」或「域和路由」中打开分配的 `https://quietkey.<你的子域名>.workers.dev` 地址，手机也可通过同一地址访问。连接 GitHub 后，向生产分支推送更新会触发部署。
-
-参考：[Workers 静态资源](https://developers.cloudflare.com/workers/static-assets/) · [兼容日期](https://developers.cloudflare.com/workers/configuration/compatibility-dates/)。
-
-### Pages：直接上传
-
-1. 将 `栖钥-离线版.html` 复制到一个空文件夹，并重命名为 `index.html`。
-2. 登录 Cloudflare，进入 **Workers & Pages**，创建 **Pages** 项目，选择直接上传文件。
-3. 上传该文件夹，或上传根目录包含 `index.html` 的 ZIP。
-4. 完成部署后，使用 Cloudflare 分配的 HTTPS 地址访问。
-
-也可以直接上传仓库的 `dist/` 文件夹。文件夹中已包含 `index.html`、样式、脚本与二维码识别库。
-
-更新时，在原项目中创建新的生产部署并上传最新版文件，继续使用原来的站点地址。
-
-### Pages：连接 GitHub
-
-如果希望推送代码后自动更新，可以在创建 Pages 项目时连接本仓库：
-
-| 设置 | 值 |
-| --- | --- |
-| 生产分支 | `main` |
-| 框架预设 | 无 / None |
-| 构建命令 | 留空 |
-| 输出目录 | `dist` |
-
-Pages 的这个流程不需要填写部署命令。如果页面要求填写 `npx wrangler deploy`，说明进入了 Workers 创建流程，请使用上面的 Workers 配置。
-
-这里的 `dist/` 是已提交的静态源码目录，无需构建即可部署。具体入口以 [Cloudflare Pages 官方文档](https://developers.cloudflare.com/pages/get-started/direct-upload/) 为准。
-
-**本地文件、不同域名、不同浏览器和不同设备的数据彼此独立。** 从离线版切换到托管地址，或更换手机、浏览器、域名之前，请先导出加密备份，再在新位置恢复。
-
-## 导入账号
-
-### 手动密钥
-
-填写服务名称、账号和服务提供的 Base32 设置密钥。可选分组，并在高级设置中指定算法、位数与周期。
-
-| 参数 | 支持范围 | 默认值 |
+| 导出格式 | 保留的信息 | 适合用途 |
 | --- | --- | --- |
-| 类型 | TOTP | TOTP |
-| 哈希算法 | SHA1、SHA256、SHA512 | SHA1 |
-| 验证码位数 | 6、8 | 6 |
-| 更新周期 | 15–120 秒的整数 | 30 秒 |
+| 加密 JSON 备份 | 全部账号与设置，需要备份时的主密码 | 日常备份、栖钥之间迁移 |
+| 明文 JSON | 账号、原始密钥、算法、位数、周期、分组、常用标记 | 批量追加、自行处理数据 |
+| 原始密钥 TXT | 每行一个 Base32 密钥 | 仅需要原始字符串时使用 |
+| 验证链接 TXT | 每行一个 `otpauth://totp/` 链接，含账号与验证码参数 | 导入支持该格式的其他工具 |
 
-### 验证链接
+明文文件包含可生成验证码的密钥，请妥善保管。原始密钥 TXT 不含账号名称和算法等设置；需要完整迁移时，优先选择加密备份或明文 JSON。
 
-支持单条或多行标准 `otpauth://totp/` 链接，自动读取账号信息和参数：
+### 换设备时追加账号，不覆盖已有数据
+
+1. **旧设备**：打开「备份与恢复」→「导出加密备份」。
+2. **新设备**：先创建或解锁自己的保险库。
+3. 打开「备份与恢复」→「合并导入」，选择旧设备导出的 JSON。
+4. 输入**旧备份的主密码**，核对预览后点击「添加」。
+
+导入后仍使用**新设备原来的主密码**。相同密钥、算法、位数和周期的条目会跳过；已有账号的名称、分组和常用标记不会被覆盖。账号名称相同但密钥不同的条目仍会追加。
+
+「添加账号 → 批量导入」也能识别加密备份，并引导输入备份主密码。旧版本导出的栖钥加密 JSON 可直接使用。
+
+### 完整恢复与合并的区别
+
+| 操作 | 现有账号 | 解锁密码 |
+| --- | --- | --- |
+| **合并导入** | 保留，追加新账号 | 继续使用当前保险库主密码 |
+| **从备份替换恢复** | 替换为备份中的账号 | 改为备份的主密码 |
+
+完整替换入口位于「备份与恢复 → 替换整个保险库」，需要明确勾选确认。已有账号的新设备通常应选择「合并导入」。
+
+## 导入格式
+
+支持 TOTP，验证码位数为 **6 或 8**，更新周期为 **15–120 秒的整数**，默认 SHA1 / 6 位 / 30 秒。一次最多导入 5000 个账号，合并后的保险库也最多保存 5000 个账号；文件最大 10 MB。
+
+以下均为公开测试数据，请勿用于真实账号。
+
+<details>
+<summary>验证链接、CSV、JSON 和原始密钥示例</summary>
+
+**验证链接**：可以粘贴一条或多行。
 
 ```text
 otpauth://totp/Example:demo%40example.com?secret=JBSWY3DPEHPK3PXP&issuer=Example&algorithm=SHA1&digits=6&period=30
 ```
 
-以上密钥是公开的格式示例，不要用于真实账号。
-
-### 二维码图片
-
-可以选择、拖放或粘贴包含标准验证链接的二维码图片。支持 PNG、JPG、WebP 等浏览器可解码的图片，文件最大 10 MB。每张图片放置一个完整、清晰的二维码，识别在本机完成。
-
-### CSV / JSON / 文本
-
-CSV 不带表头时，每行依次为 `服务名称,账号,密钥`；带表头时支持对应字段名。例如：
+**CSV**：不带表头时按 `服务名称,账号,密钥` 排列，也支持同名字段表头。
 
 ```csv
-issuer,account,secret,group
-Example,demo@example.com,JBSWY3DPEHPK3PXP,个人
+issuer,account,secret,algorithm,digits,period,group
+Example,demo@example.com,JBSWY3DPEHPK3PXP,SHA1,6,30,个人
 ```
 
-JSON 支持账号数组，或包含 `accounts` 数组的对象：
+**JSON**：支持账号数组，或包含 `accounts` 数组的对象。
 
 ```json
-[
-  {
-    "issuer": "Example",
-    "account": "demo@example.com",
-    "secret": "JBSWY3DPEHPK3PXP",
-    "algorithm": "SHA1",
-    "digits": 6,
-    "period": 30,
-    "group": "个人"
-  }
-]
+{
+  "accounts": [
+    {
+      "issuer": "Example",
+      "account": "demo@example.com",
+      "secret": "JBSWY3DPEHPK3PXP",
+      "algorithm": "SHA1",
+      "digits": 6,
+      "period": 30,
+      "group": "个人",
+      "favorite": false
+    }
+  ]
+}
 ```
 
-也可每行粘贴一个 Base32 密钥。导入会先展示预览，再确认添加；相同密钥、算法、位数和周期的条目会被去重。建议将批次控制在 500 个账号以内，文本文件最大 2 MB。
+**原始密钥**：每行一个 Base32 密钥。手动输入时可以包含空格或连字符，保存时会规范化。
 
-栖钥的加密备份应通过「备份与恢复」读取，不属于上述普通 JSON 导入格式。
+```text
+JBSWY3DPEHPK3PXP
+```
 
-## 数据与加密
+</details>
+
+二维码入口支持上传、拖放和粘贴图片，文件最大 10 MB。每张图片放置一个清晰、完整的标准 `otpauth` 二维码，识别在本机完成。
+
+## 数据与安全
 
 「保险库」是本地加密数据的名称，不是云端账户。
 
 ```text
 主密码 + 随机盐
     → PBKDF2-SHA256（600,000 次迭代）
-    → AES-256-GCM 加密密钥
-    → 加密账号数据 → 浏览器 localStorage
+    → AES-256-GCM 加密
+    → 浏览器 localStorage / 加密 JSON 备份
 ```
 
 - 每个保险库使用 16 字节随机盐；每次保存生成新的 12 字节随机 IV。
-- 保存与备份的数据包含密文和解密所需的参数，不包含明文主密码或明文账号密钥。
-- 主密码不限制长度和字符组合，仅要求非空、两次输入一致；较短密码更容易被猜中。
-- 解锁后，页面内存中会存在解密后的账号数据；锁定会释放应用持有的账号与密钥引用，但这不等于浏览器内存的可验证擦除。
-- 页面不包含云同步或密钥上传功能，二维码库随项目分发，不从第三方 CDN 动态加载。
+- 浏览器存储和加密备份不含明文主密码或明文账号密钥；主动导出的明文文件除外。
+- 应用不提供云同步或密钥上传功能，二维码库随项目分发，不从第三方 CDN 动态加载。
+- 解锁后，内存中会存在解密后的账号；锁定会释放应用持有的账号和密钥引用，不代表浏览器内存已被可验证地擦除。
+- 主密码无法找回。清除站点数据、结束无痕会话或清理浏览器存储可能移除保险库，请保留加密备份及服务本身的恢复码。
 
-主密码无法找回。清除站点数据、无痕会话结束或浏览器清理存储都可能导致本地数据丢失，因此请保留加密备份及服务本身的恢复码。恢复备份会替换当前浏览器的保险库，不会合并。
+本地加密不能抵御已解锁页面中的恶意脚本、恶意扩展或被控制的设备。项目尚未经过独立安全审计。发现涉及密钥、加密或数据泄露的问题，请按 [安全报告说明](./SECURITY.md) 私密报告。
 
-本地加密保护的是保存下来的数据，不能抵御已解锁页面中的恶意脚本、恶意浏览器扩展或被控制的设备。项目尚未经过独立安全审计。
+## 常见问题
 
-## 当前限制
+<details>
+<summary>为什么换网址、换手机后账号不见了？</summary>
 
-- 不支持 HOTP、Steam Guard 专用验证码及 Google Authenticator 的 `otpauth-migration://` 迁移二维码。
-- 二维码入口处理图片，未实现摄像头实时扫描。
-- 不提供账号注册、云同步、密码找回或主密码修改入口。
-- 尚未实现 PWA 安装和 Service Worker 离线缓存；托管版不保证断网后重新打开可用。
-- 验证码依赖设备时间，请开启系统自动校时。
-- 复制能力受浏览器权限限制，失败时可选择验证码手动复制。
+账号加密保存在原设备、原浏览器、原站点的本地存储中。GitHub Pages 和其他域名的数据互不迁移，程序更新也不会上传账号。请在原位置导出加密备份，然后在新位置合并导入或恢复。
 
-## 项目结构
+</details>
 
-```text
-QuietKey/
-├── dist/
-│   ├── index.html              # 静态页面入口
-│   ├── app.js                  # 界面与账号管理
-│   ├── core.mjs                # TOTP、输入解析与加密
-│   ├── style.css               # 主题与响应式样式
-│   ├── favicon.svg
-│   └── vendor/                 # jsQR 及其许可证
-├── tests/                      # 核心逻辑与单文件打包检查
-├── build-standalone.mjs         # 离线 HTML 打包
-├── server.mjs                  # 本机开发服务器
-├── start.ps1                   # Windows 启动入口
-└── 栖钥-离线版.html             # 可分发的单文件版本
+<details>
+<summary>为什么导出的 JSON 看不到原始密钥？</summary>
+
+「导出加密备份」得到的是密文。要取得原始字符串，请使用「导出密钥」选择明文 JSON / TXT，或在单个账号的管理窗口复制密钥。
+
+</details>
+
+<details>
+<summary>更新网页会清空已有账号吗？</summary>
+
+继续使用同一浏览器、同一站点地址，正常更新静态网页不会清除本地保险库。不要为了刷新页面而清除站点数据；更换域名或浏览器前先备份。
+
+</details>
+
+<details>
+<summary>验证码不正确或复制失败怎么办？</summary>
+
+先检查系统自动校时，以及账号的密钥、算法、位数和周期。剪贴板能力受浏览器权限限制；失败时可手动选择复制。原始密钥的复制失败时，页面会显示并选中密钥，方便手动复制。
+
+</details>
+
+### 当前限制
+
+- 仅支持 TOTP；不支持 HOTP、Steam Guard 专用验证码和 Google Authenticator 的 `otpauth-migration://` 迁移二维码。
+- 二维码入口处理图片，尚无摄像头实时扫描。
+- 不提供云同步、主密码找回或主密码修改入口。
+- 尚无 PWA 安装和 Service Worker 离线缓存；托管版不保证断网后重新打开可用，离线使用请下载单文件版。
+
+## 部署与开发
+
+### GitHub Pages
+
+本仓库已使用 **`main` 分支 / 根目录** 发布，推送到 `main` 后会自动更新 [在线站点](https://tianyin231.github.io/QuietKey2fa/)。根目录 `index.html` 引导到 `dist/`，`.nojekyll` 保证静态文件直接发布。
+
+自行 Fork 后，在 **Settings → Pages → Deploy from a branch** 选择 `main` 和 `/(root)`。部署状态可在 **Actions → pages build and deployment** 查看。参见 [GitHub Pages 官方说明](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)。
+
+### 其他静态托管
+
+上传 [`dist/`](./dist) 目录中的全部文件即可，不需要服务器运行时、安装依赖或执行构建。也可以将离线 HTML 重命名为 `index.html` 后单独托管。请使用 HTTPS 以启用浏览器 Web Crypto。
+
+### 本地开发
+
+使用 **Node.js 22 或更高版本**。
+
+```bash
+git clone https://github.com/tianyin231/QuietKey2fa.git
+cd QuietKey2fa
+npm start
 ```
 
-修改 `dist/` 后，请执行 `npm test`，并一并提交重新生成的离线 HTML，保持两种使用方式一致。
+打开 `http://127.0.0.1:8765`。没有需要安装的 npm 依赖，无需运行 `npm install`；本地服务器只监听本机地址。
 
-测试覆盖 RFC 6238 的 SHA1 / SHA256 / SHA512 共 18 组参考向量、导入解析、错误输入、加密往返、错误密码、密文篡改以及浏览器换行规范化后的 CSP 哈希一致性。自动化测试不替代真实设备兼容性检查。
+| 命令 | 用途 |
+| --- | --- |
+| `npm start` | 启动本地静态文件服务器 |
+| `npm run build:standalone` | 将 `dist/` 打包为离线 HTML，包含许可文本 |
+| `npm test` | 重新打包，并运行核心逻辑与离线文件检查 |
 
-## 致谢
+```text
+QuietKey2fa/
+├── dist/                     # 可直接部署的静态源码
+│   ├── app.js                # 界面、密钥导出、备份与合并导入
+│   ├── core.mjs              # TOTP、数据解析与加密
+│   ├── index.html / style.css
+│   └── vendor/               # jsQR 及 Apache 2.0 许可证
+├── tests/                    # 算法、迁移、加密和打包检查
+├── build-standalone.mjs       # 单文件打包
+├── server.mjs / start.ps1     # 本地启动
+├── index.html / .nojekyll     # GitHub Pages 入口
+└── 栖钥-离线版.html            # 可分发的离线版本
+```
 
-- [RFC 6238](https://www.rfc-editor.org/rfc/rfc6238)：TOTP 算法规范。
-- [jsQR](https://github.com/cozmo/jsQR)：本地二维码识别，第三方许可证保留于 [`dist/vendor/jsQR.LICENSE`](./dist/vendor/jsQR.LICENSE)。
+修改 `dist/` 后执行 `npm test`，并一并提交重新生成的离线 HTML。测试包含 RFC 6238 的 18 组参考向量、导入导出往返、去重合并、不同主密码迁移、错误密码和密文篡改拒绝、离线脚本 CSP 一致性。
 
-本仓库尚未声明项目整体的开源许可证；第三方代码遵循各自许可证。
+## 反馈与参与
+
+- 使用问题与功能建议：[创建 Issue](https://github.com/tianyin231/QuietKey2fa/issues/new/choose)。请使用虚构账号复现，不要上传真实密钥、二维码或备份文件。
+- 提交代码：[贡献说明](./CONTRIBUTING.md)。
+- 安全问题：[私密漏洞报告](https://github.com/tianyin231/QuietKey2fa/security/advisories/new)。
+- 下载与更新：[Releases](https://github.com/tianyin231/QuietKey2fa/releases)。
+
+## 许可证与致谢
+
+项目原创代码采用 [MIT 许可证](./LICENSE)。第三方二维码库 [jsQR](https://github.com/cozmo/jsQR) 遵循 [Apache 2.0](./dist/vendor/jsQR.LICENSE)，其许可文本也保留在生成的离线 HTML 中。
+
+TOTP 实现遵循 [RFC 6238](https://www.rfc-editor.org/rfc/rfc6238)。

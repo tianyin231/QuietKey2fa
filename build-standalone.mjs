@@ -3,11 +3,13 @@ import {createHash} from 'node:crypto';
 import vm from 'node:vm';
 
 const read=name=>readFile(new URL(`./dist/${name}`,import.meta.url),'utf8');
-const [template,css,favicon,qr,core,app]=await Promise.all(['index.html','style.css','favicon.svg','vendor/jsQR.js','core.mjs','app.js'].map(read));
+const [template,css,favicon,qr,core,app,qrLicense]=await Promise.all(['index.html','style.css','favicon.svg','vendor/jsQR.js','core.mjs','app.js','vendor/jsQR.LICENSE'].map(read));
+const license=await readFile(new URL('./LICENSE',import.meta.url),'utf8');
 // Classic inline scripts work under file:// without module fetches or a local server.
 // HTML parsing normalizes CRLF/CR before CSP hashes are checked.
 // Hash exactly the LF-only script text the browser will execute.
-const scripts=[qr,`(()=>{\n${core.replace(/^export /gm,'')}\n${app.replace(/^import .*;\r?\n/,'')}\n})();`].map(code=>code.replace(/\r\n?/g,'\n').replace(/<\/script/gi,'<\\/script'));
+// 单文件分发时也保留项目与第三方库的完整许可文本。
+const scripts=[`/* jsQR — https://github.com/cozmo/jsQR\n${qrLicense}\n*/\n${qr}`,`/* QuietKey\n${license}\n*/\n(()=>{\n${core.replace(/^export /gm,'')}\n${app.replace(/^import .*;\r?\n/,'')}\n})();`].map(code=>code.replace(/\r\n?/g,'\n').replace(/<\/script/gi,'<\\/script'));
 scripts.forEach(code=>new vm.Script(code));
 const hashes=scripts.map(code=>`'sha256-${createHash('sha256').update(code).digest('base64')}'`).join(' ');
 const html=template

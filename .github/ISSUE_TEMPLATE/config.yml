@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 使用与迁移指南
+    url: https://github.com/tianyin231/QuietKey2fa#导出与迁移
+    about: 查看原始密钥导出、备份恢复和追加导入步骤。
+  - name: 私密报告安全漏洞
+    url: https://github.com/tianyin231/QuietKey2fa/security/advisories/new
+    about: 涉及密钥泄露或加密的问题，请通过私密渠道报告。

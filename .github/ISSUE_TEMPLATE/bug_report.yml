@@ -1,0 +1,40 @@
+name: 问题反馈
+description: 报告使用、导入导出或兼容性问题
+title: "[问题] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请用虚构账号复现，不要上传真实密钥、二维码、主密码或备份。
+        安全漏洞请使用仓库 Security 页面的私密报告入口。
+  - type: input
+    id: environment
+    attributes:
+      label: 使用环境
+      description: 系统、浏览器版本，以及在线版 / 离线 HTML / 本地开发方式。
+      placeholder: Windows 11，Edge，GitHub 在线版
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 版本或提交
+      description: 不确定时可填写使用日期。
+      placeholder: v1.1.0
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 打开……
+        2. 点击……
+        3. 出现……
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: 预期结果与实际结果
+      description: 可附已脱敏的错误提示或截图。
+    validations:
+      required: true
